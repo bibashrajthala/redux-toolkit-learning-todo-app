@@ -1,4 +1,4 @@
-import { createSlice } from "@reduxjs/toolkit";
+import { createSlice, nanoid } from "@reduxjs/toolkit";
 
 const initialState = [
   { id: 1, title: "redux-toolkit", content: "learning redux toolkit" },
@@ -13,9 +13,21 @@ export const postsSlice = createSlice({
   name: "posts",
   initialState,
   reducers: {
-    addPost(state, action) {
-      console.log(action.payload);
-      state.push(action.payload);
+    addPost: {
+      reducer(state, action) {
+        // console.log(action.payload);
+        state.push(action.payload);
+      },
+      prepare(title, content) {
+        // instead of sending data in our global state form {id,title,content} we can dispatch/send data as it is and prepare() of slice will take care of preparing the data shape we need,so our component dont have to know and dont care about global state shape
+        return {
+          payload: {
+            id: nanoid(),
+            title,
+            content,
+          },
+        };
+      },
     },
   },
 });

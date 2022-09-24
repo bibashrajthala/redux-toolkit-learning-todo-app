@@ -14,15 +14,11 @@ const AddPostForm = () => {
   const onContentChange = (e) => setContent(e.target.value);
   const onSavePost = (e) => {
     e.preventDefault();
-    dispatch(
-      addPost({
-        id: nanoid(),
-        title,
-        content,
-      })
-    );
-    setTitle("");
-    setContent("");
+    if (title && content) {
+      dispatch(addPost(title, content)); // instead of sending data in our global state form {id,title,content} we can dispatch/send data as it is and prepare() of slice will take care of preparing the data shape we need,so our component dont have to know and dont care about global state shape
+      setTitle("");
+      setContent("");
+    }
   };
 
   return (
