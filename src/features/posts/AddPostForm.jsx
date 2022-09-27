@@ -1,18 +1,23 @@
 import moment from "moment";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 
 import { useDispatch, useSelector } from "react-redux";
-import { selectAllUsers } from "../users/usersSlice";
-import { addPost } from "./postsSlice";
+import { fetchUsers, selectAllUsers } from "../users/usersSlice";
+import { addNewPost, addPost } from "./postsSlice";
 
 const AddPostForm = () => {
   const dispatch = useDispatch();
   const users = useSelector(selectAllUsers);
-  console.log(users);
+  // console.log(users);
 
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
   const [userId, setUserId] = useState("");
+  const [addRequestStatus, setAddRequestStatus] = useState("idle");
+
+  useEffect(() => {
+    dispatch(fetchUsers());
+  }, []);
 
   const onTitleChange = (e) => setTitle(e.target.value);
   const onContentChange = (e) => setContent(e.target.value);
@@ -20,21 +25,31 @@ const AddPostForm = () => {
 
   const usersOptions = users.map((user, index) => (
     <>
-      <option value="" defaultValue={" "} disabled={true}></option>
       <option key={index} value={user.id}>
         {user.name}
       </option>
     </>
   ));
 
+  const canSave =
+    [title, content, userId].every(Boolean) && addRequestStatus === "idle";
+
   const onSavePost = (e) => {
     e.preventDefault();
-    const date = Date.now();
-    if (title && content) {
-      dispatch(addPost(title, content, userId, moment(date).fromNow())); // instead of sending data in our global state form {id,title,content} we can dispatch/send data as it is and prepare() of slice will take care of preparing the data shape we need,so our component dont have to know and dont care about global state shape
-      setTitle("");
-      setContent("");
-      setUserId("");
+    const date = moment(Date.now()).fromNow();
+    if (canSave) {
+      try {
+        setAddRequestStatus("pending");
+        // dispatch(addPost(title, content, userId, moment(date).fromNow()));
+        dispatch(addNewPost({ title, body: content, userId, date })).unwrap();
+        setTitle("");
+        setContent("");
+        setUserId("");
+      } catch (error) {
+        console.error("Failed to save the post", error);
+      } finally {
+        setAddRequestStatus("idle");
+      }
     }
   };
 
@@ -58,6 +73,7 @@ const AddPostForm = () => {
           <label htmlFor="author">Author</label>
           <br />
           <select name="author" id="author" onChange={onAuthorChange}>
+            <option value="" selected={true} disabled={true}></option>
             {usersOptions}
           </select>
         </div>
